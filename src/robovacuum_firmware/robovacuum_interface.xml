@@ -1,0 +1,10 @@
+<library path="robovacuum_firmware">
+    <class name="robovacuum_firmware/RobovacuumInterface"
+      type="robovacuum_firmware::RobovacuumInterface"
+      base_class_type="hardware_interface::SystemInterface"
+    >
+      <description>
+        Robovacuum Hardware Interface
+      </description>
+    </class>
+  </library>
