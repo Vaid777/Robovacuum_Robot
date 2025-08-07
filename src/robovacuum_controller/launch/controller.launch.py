@@ -5,7 +5,7 @@ from launch.substitutions import LaunchConfiguration
 from launch.conditions import UnlessCondition, IfCondition
 
 
-def noisy_controller(context, *args, **kwargs):
+"""def noisy_controller(context, *args, **kwargs):
     use_sim_time = LaunchConfiguration("use_sim_time")
     use_python = LaunchConfiguration("use_python")
     wheel_radius = float(LaunchConfiguration("wheel_radius").perform(context))
@@ -36,7 +36,7 @@ def noisy_controller(context, *args, **kwargs):
     return [
         noisy_controller_py,
         noisy_controller_cpp,
-    ]
+    ]"""
 
 
 
@@ -87,7 +87,7 @@ def generate_launch_description():
     )
 
 
-    noisy_controller_launch = OpaqueFunction(function=noisy_controller)
+    #noisy_controller_launch = OpaqueFunction(function=noisy_controller)
 
     return LaunchDescription(
         [
@@ -98,6 +98,6 @@ def generate_launch_description():
             wheel_separation_error_arg,
             joint_state_broadcaster_spawner,
             wheel_controller_spawner,
-            noisy_controller_launch,
+            #noisy_controller_launch,
         ]
     )
