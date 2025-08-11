@@ -7,7 +7,7 @@
         <!-- ros2_control Real Robot -->
             <hardware>
                 <plugin>robovacuum_firmware/RobovacuumInterface</plugin>
-                <param name="port">/dev/ttyUSB0</param>
+                <param name="port">/dev/ttyACM0</param>
             </hardware>
         
         <!-- ros2_control Common Interfaces -->
@@ -30,5 +30,4 @@
         </joint>
         
     </ros2_control>
-
 </robot>
