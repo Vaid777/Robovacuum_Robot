@@ -36,7 +36,7 @@ def generate_launch_description():
             os.path.join(
                 get_package_share_directory("robovacuum_controller"),
                 "config",
-                "robovacuum_controllers.yaml",
+                "robovacuum_controller.yaml",
             ),
         ],
     )
