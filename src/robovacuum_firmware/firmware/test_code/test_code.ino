@@ -3,10 +3,10 @@
 // L298N H-Bridge Connection PINs
 // enA and enB are permanently tied HIGH (3.3V or 5V)
 // Motor control is done via IN pins only
-#define L298N_in1 12  // Right Motor Direction A
-#define L298N_in2 13  // Right Motor Direction B (used as PWM)
-#define L298N_in3 7   // Left Motor Direction A  
-#define L298N_in4 8   // Left Motor Direction B (used as PWM)
+#define L298N_in1 6  // Right Motor Direction A
+#define L298N_in2 9  // Right Motor Direction B (used as PWM)
+#define L298N_in3 10   // Left Motor Direction A  
+#define L298N_in4 11   // Left Motor Direction B (used as PWM)
 
 // Wheel Encoders Connection PINs
 #define right_encoder_phaseA 3  // Interrupt pin
@@ -27,6 +27,7 @@ bool is_right_wheel_cmd = false;
 bool is_left_wheel_cmd = false;
 char value[10] = "00.00";
 uint8_t value_idx = 0;
+char current_sign = 'p';  // Track the sign for current command
 
 // PID variables - these match what ROS2 driver expects
 double right_wheel_cmd_vel = 0.0;  // rad/s (commanded velocity from ROS2)
@@ -36,9 +37,9 @@ double left_wheel_meas_vel = 0.0;  // rad/s
 double right_wheel_cmd = 0.0;      // PWM output (0-255)
 double left_wheel_cmd = 0.0;       // PWM output (0-255)
 
-// PID tuning parameters - adjust these for your motors
-double Kp_r = 11.5, Ki_r = 7.5, Kd_r = 0.1;
-double Kp_l = 12.8, Ki_l = 8.3, Kd_l = 0.1;
+// PID tuning parameters - IMPROVED VALUES
+double Kp_r = 15.0, Ki_r = 8.0, Kd_r = 0.2;
+double Kp_l = 15.0, Ki_l = 8.0, Kd_l = 0.2;
 
 // PID controllers
 PID rightMotor(&right_wheel_meas_vel, &right_wheel_cmd, &right_wheel_cmd_vel, Kp_r, Ki_r, Kd_r, DIRECT);
@@ -52,11 +53,6 @@ void setup() {
   pinMode(L298N_in4, OUTPUT);
   
   // Initialize motors to stopped state
-  // For L298N with permanent high enable:
-  // To stop: both IN pins LOW
-  // To go forward: IN1=HIGH, IN2=LOW (or vice versa)
-  // To go backward: IN1=LOW, IN2=HIGH
-  // To control speed: PWM one of the IN pins
   digitalWrite(L298N_in1, LOW);
   digitalWrite(L298N_in2, LOW);
   digitalWrite(L298N_in3, LOW);
@@ -106,6 +102,7 @@ void handleSerialCommands() {
         is_left_wheel_cmd = false;
         value_idx = 0;
         memset(value, 0, sizeof(value));
+        current_sign = 'p';  // Default to positive
         break;
         
       case 'l':
@@ -114,29 +111,38 @@ void handleSerialCommands() {
         is_left_wheel_cmd = true;
         value_idx = 0;
         memset(value, 0, sizeof(value));
+        current_sign = 'p';  // Default to positive
         break;
         
       case 'p':
-        // Positive direction flag - stored for processing with comma
+        // Positive direction flag - store it
+        current_sign = 'p';
         break;
         
       case 'n':
-        // Negative direction flag - stored for processing with comma
+        // Negative direction flag - store it
+        current_sign = 'n';
         break;
         
       case ',':
         // End of command - process the accumulated value
+        double cmd_value = atof(value);
+        
+        // Apply sign to the command value
+        if (current_sign == 'n') {
+          cmd_value = -cmd_value;
+        }
+        
         if (is_right_wheel_cmd) {
-          right_wheel_cmd_vel = atof(value);
-          // Check if this was a negative command by looking at previous char
-          // This is handled by the ROS2 driver's write() function format
+          right_wheel_cmd_vel = cmd_value;
         } else if (is_left_wheel_cmd) {
-          left_wheel_cmd_vel = atof(value);
+          left_wheel_cmd_vel = cmd_value;
         }
         
         // Reset for next command
         value_idx = 0;
         memset(value, 0, sizeof(value));
+        current_sign = 'p';
         break;
         
       default:
@@ -158,8 +164,8 @@ void updateMotorControl() {
     // Convert encoder pulses to rad/s
     // Formula: (pulses * 60.0/total_pulses_per_rev) * (1000.0/interval_ms) * (2*PI/60)
     // Simplified: (pulses * conversion_factor) * frequency_multiplier
-    right_wheel_meas_vel = (right_encoder_counter * (60.0/385.0)) * (1000.0/interval) * 0.10472;
-    left_wheel_meas_vel = (left_encoder_counter * (60.0/385.0)) * (1000.0/interval) * 0.10472;
+    right_wheel_meas_vel = (right_encoder_counter * (60.0/1125.0)) * (1000.0/interval) * 0.10472;
+    left_wheel_meas_vel = (left_encoder_counter * (60.0/1125.0)) * (1000.0/interval) * 0.10472;
     
     // Apply direction sign
     if (right_wheel_sign == "n") {
@@ -197,12 +203,17 @@ void controlRightMotor() {
   
   int pwm_value = constrain(abs((int)right_wheel_cmd), 0, 255);
   
+  // Add minimum PWM to overcome motor static friction
+  if (pwm_value > 0 && pwm_value < 60) {
+    pwm_value = 60;  // Minimum PWM to start motor movement
+  }
+  
   if (right_wheel_cmd_vel > 0) {
-    // Forward: IN1=HIGH, IN2=PWM(LOW to HIGH)
+    // Forward: IN1=HIGH, IN2=PWM(inverted)
     digitalWrite(L298N_in1, HIGH);
     analogWrite(L298N_in2, 255 - pwm_value);  // Inverted PWM
   } else {
-    // Backward: IN1=PWM(LOW to HIGH), IN2=HIGH  
+    // Backward: IN1=PWM(inverted), IN2=HIGH  
     analogWrite(L298N_in1, 255 - pwm_value);  // Inverted PWM
     digitalWrite(L298N_in2, HIGH);
   }
@@ -218,13 +229,18 @@ void controlLeftMotor() {
   
   int pwm_value = constrain(abs((int)left_wheel_cmd), 0, 255);
   
+  // Add minimum PWM to overcome motor static friction
+  if (pwm_value > 0 && pwm_value < 60) {
+    pwm_value = 60;  // Minimum PWM to start motor movement
+  }
+  
   // Left motor might be mounted in reverse - adjust accordingly
   if (left_wheel_cmd_vel > 0) {
-    // Forward: IN3=HIGH, IN4=PWM(LOW to HIGH)
+    // Forward: IN3=HIGH, IN4=PWM(inverted)
     digitalWrite(L298N_in3, HIGH);
     analogWrite(L298N_in4, 255 - pwm_value);  // Inverted PWM
   } else {
-    // Backward: IN3=PWM(LOW to HIGH), IN4=HIGH
+    // Backward: IN3=PWM(inverted), IN4=HIGH
     analogWrite(L298N_in3, 255 - pwm_value);  // Inverted PWM  
     digitalWrite(L298N_in4, HIGH);
   }
