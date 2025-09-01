@@ -3,12 +3,27 @@
 
     <ros2_control name="RobotSystem" type="system">
 
+        <xacro:if value="$(arg is_ignition)">
+            <hardware>
+                <plugin>ign_ros2_control/IgnitionSystem</plugin>
+            </hardware>
+        </xacro:if>
+
+        <xacro:unless value="$(arg is_ignition)">
+            <hardware>
+                <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+            </hardware>
+        </xacro:unless>
+
 
         <!-- ros2_control Real Robot -->
+         <xacro:unless value="$(arg is_sim)">
             <hardware>
                 <plugin>robovacuum_firmware/RobovacuumInterface</plugin>
                 <param name="port">/dev/ttyACM1</param>
             </hardware>
+         </xacro:unless>
+            
         
         <!-- ros2_control Common Interfaces -->
         <joint name="wheel_right_joint">

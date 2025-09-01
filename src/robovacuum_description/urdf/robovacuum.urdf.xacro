@@ -1,9 +1,16 @@
 <?xml version="1.0"?>
 <robot name="robovacuum" xmlns:xacro="http://ros.org/wiki/xacro">
 
+  <xacro:arg name="is_ignition" default="true"/>
+
+  <xacro:arg name="is_sim" default="true"/>
+
   <!-- Include ros2_control Plugins -->
   <xacro:include filename="$(find robovacuum_description)/urdf/robovacuum_ros2_control.xacro" />
+
   <xacro:include filename="$(find robovacuum_description)/urdf/inertial_macros.xacro" />
+  <!--Inculude Gazebo Parameters-->
+  <xacro:include filename="$(find robovacuum_description)/urdf/robovacuum_gazebo.xacro" />
 
   <material name="white">
     <color rgba="1 1 1 1"/>
@@ -24,20 +31,20 @@
   <link name="base_link"/>  <!--generally in the center of differential drive wheel-->
   <link name="base_footprint">
     <visual>
-      <origin xyz="-0.2 0 0.05"/>
+      <origin xyz="0.225 0 0.05"/>
       <geometry>
         <box size="0.45 0.35 0.1"/>
       </geometry>
       <material name="white"/>
     </visual>
     <collision>
-      <origin xyz="-0.2 0 0"/>
+      <origin xyz="0.225 0 0.05"/>
       <geometry>
         <box size="0.45 0.35 0.1"/>
       </geometry>
     </collision>
     <xacro:inertial_box mass="10" x="0.45" y="0.35" z="0.1">
-      <origin xyz="-0.2 0 0" rpy="0 0 0"/>
+      <origin xyz="0.225 0 0.05" rpy="0 0 0"/>
     </xacro:inertial_box>
   </link>
 
@@ -78,7 +85,7 @@
   <link name="caster_wheel">
     <visual>
       <geometry>
-        <sphere radius="0.01"/>
+        <sphere radius="0.05"/>
       </geometry>
       <material name="black"/>
     </visual>
@@ -87,35 +94,59 @@
         <sphere radius="0.02"/>
       </geometry>
     </collision>
-    <xacro:inertial_sphere mass="0.1" radius="0.01">
+    <xacro:inertial_sphere mass="0.1" radius="0.05">
       <origin xyz="0 0 0" rpy="0 0 0"/>
     </xacro:inertial_sphere>
   </link>
 
+  <link name="imu_link">
+  <visual>
+    <geometry>
+      <box size="0.025 0.02 0.003"/>  <!-- BNO055 dimensions: 25x20x3mm -->
+    </geometry>
+    <material name="blue"/>
+  </visual>
+  <collision>
+    <geometry>
+      <box size="0.025 0.02 0.003"/>
+    </geometry>
+  </collision>
+  <xacro:inertial_box mass="0.003" x="0.025" y="0.02" z="0.003">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </xacro:inertial_box>
+</link>
+
+
   <joint name="base_joint" type="fixed">
     <parent link="base_link"/>
     <child link="base_footprint"/>
-    <origin xyz="0.2 0 0"/>
+    <origin xyz="-0.2 0 -0.05"/>
   </joint>
 
   <joint name="wheel_left_joint" type="continuous">
     <parent link="base_link"/>
     <child link="wheel_left_link"/>
-    <origin xyz="0 0.175 0.05" rpy="-${pi/2} 0 0"/>
+    <origin xyz="0 0.175 0" rpy="-${pi/2} 0 0"/>
     <axis xyz="0 0 1"/>
   </joint>
 
   <joint name="wheel_right_joint" type="continuous">
     <parent link="base_link"/>
     <child link="wheel_right_link"/>
-    <origin xyz="0 -0.175 0.05" rpy="${pi/2} 0 0"/>
+    <origin xyz="0 -0.175 0" rpy="${pi/2} 0 0"/>
     <axis xyz="0 0 -1"/>
   </joint>
 
   <joint name="caster_wheel_joint" type="fixed">
     <parent link="base_footprint"/>
     <child link="caster_wheel"/>
-    <origin xyz="-0.43 0 0"/>
+    <origin xyz="0.43 0 0"/>
+  </joint>
+
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child link="imu_link"/>
+    <origin xyz="0.225 0 0.1" rpy="0 0 0"/>
   </joint>
 
 </robot>
