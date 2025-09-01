@@ -2,12 +2,12 @@
 #define L298N_in1 6  // Dir Motor A
 #define L298N_in2 9  // Dir Motor A
 
-#define right_encoder_phaseA 3  // Interrupt 
-#define right_encoder_phaseB 5  
+#define left_encoder_phaseA 3  // Interrupt 
+#define left_encoder_phaseB 5  
 
-unsigned int right_encoder_counter = 0;
-String right_encoder_sign = "p";
-double right_wheel_meas_vel = 0.0;    // rad/s
+unsigned int left_encoder_counter = 0;
+String left_encoder_sign = "p";
+double left_wheel_meas_vel = 0.0;    // rad/s
 
 void setup() {
   // Set pin modes
@@ -20,28 +20,28 @@ void setup() {
 
   Serial.begin(115200);
 
-  pinMode(right_encoder_phaseB, INPUT);
-  attachInterrupt(digitalPinToInterrupt(right_encoder_phaseA), rightEncoderCallback, RISING);
+  pinMode(left_encoder_phaseB, INPUT);
+  attachInterrupt(digitalPinToInterrupt(left_encoder_phaseA), leftEncoderCallback, RISING);
 }
 
 void loop() {
-  right_wheel_meas_vel = (10 * right_encoder_counter * (60.0/19200)) * 0.10472;
-  String encoder_read = "r" + right_encoder_sign + String(right_wheel_meas_vel);
+  left_wheel_meas_vel = (10 * left_encoder_counter * (60.0/76800)) * 0.10472;
+  String encoder_read = "r" + left_encoder_sign + String(left_wheel_meas_vel);
   Serial.println(encoder_read);
-  right_encoder_counter = 0;
-  analogWrite(L298N_in1, 200);
+  left_encoder_counter = 0;
+  analogWrite(L298N_in1, 150);
   delay(100);
 }
 
-void rightEncoderCallback()
+void leftEncoderCallback()
 {
-  if(digitalRead(right_encoder_phaseB) == HIGH)
+  if(digitalRead(left_encoder_phaseB) == HIGH)
   {
-    right_encoder_sign = "p";
+    left_encoder_sign = "p";
   }
   else
   {
-    right_encoder_sign = "n";
+    left_encoder_sign = "n";
   }
-  right_encoder_counter++;
+  left_encoder_counter++;
 }
