@@ -43,11 +43,11 @@ double left_wheel_meas_vel = 0.0;     // rad/s
 double right_wheel_cmd = 0.0;         // 0-255
 double left_wheel_cmd = 0.0;          // 0-255
 // Tuning
-double Kp_r = 30.0;
-double Ki_r = 10.0;
+double Kp_r = 35.0;
+double Ki_r = 12.0;
 double Kd_r = 2.5;
-double Kp_l = 30.0;
-double Ki_l = 10.0;
+double Kp_l = 35.0;
+double Ki_l = 12.0;
 double Kd_l = 2.5;
 // Controller
 PID rightMotor(&right_wheel_meas_vel, &right_wheel_cmd, &right_wheel_cmd_vel, Kp_r, Ki_r, Kd_r, DIRECT);
