@@ -23,7 +23,10 @@ def generate_launch_description():
                 "launch",
                 "controller.launch.py"
             )
-        )
+        ),
+        launch_arguments={
+            "use_noisy_controller": "False",
+        }.items(),
     )
     
     joystick = IncludeLaunchDescription(
@@ -33,7 +36,10 @@ def generate_launch_description():
                 "launch",
                 "joystick_teleop.launch.py"
             )
-        )
+        ),
+        launch_arguments={
+            "use_sim_time": "False"
+        }.items()
     )
 
     # imu_driver_node = Node(

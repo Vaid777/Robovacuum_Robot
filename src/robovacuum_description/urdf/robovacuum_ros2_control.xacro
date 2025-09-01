@@ -20,7 +20,7 @@
          <xacro:unless value="$(arg is_sim)">
             <hardware>
                 <plugin>robovacuum_firmware/RobovacuumInterface</plugin>
-                <param name="port">/dev/ttyACM1</param>
+                <param name="port">/dev/ttyACM0</param>
             </hardware>
          </xacro:unless>
             

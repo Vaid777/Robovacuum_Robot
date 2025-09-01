@@ -17,6 +17,7 @@ def generate_launch_description():
                     "urdf",
                     "robovacuum.urdf.xacro",
                 ),
+                " is_sim:=False"
             ]
         ),
         value_type=str,
