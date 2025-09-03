@@ -2,26 +2,17 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, GroupAction, OpaqueFunction
 from launch_ros.actions import Node
 from launch.substitutions import LaunchConfiguration
-from ament_index_python.packages import get_package_share_directory
-from launch.conditions import IfCondition
-import os
+from launch.conditions import UnlessCondition, IfCondition
+
 
 def noisy_controller(context, *args, **kwargs):
     use_sim_time = LaunchConfiguration("use_sim_time")
-    use_noisy_controller = LaunchConfiguration("use_noisy_controller")
-    
-    try:
-        wheel_radius = float(LaunchConfiguration("wheel_radius").perform(context))
-        wheel_separation = float(LaunchConfiguration("wheel_separation").perform(context))
-        wheel_radius_error = float(LaunchConfiguration("wheel_radius_error").perform(context))
-        wheel_separation_error = float(LaunchConfiguration("wheel_separation_error").perform(context))
-    except ValueError as e:
-        # Use default values if conversion fails
-        wheel_radius = 0.1
-        wheel_separation = 0.35
-        wheel_radius_error = 0.005
-        wheel_separation_error = 0.02
-    
+    use_python = LaunchConfiguration("use_python")
+    wheel_radius = float(LaunchConfiguration("wheel_radius").perform(context))
+    wheel_separation = float(LaunchConfiguration("wheel_separation").perform(context))
+    wheel_radius_error = float(LaunchConfiguration("wheel_radius_error").perform(context))
+    wheel_separation_error = float(LaunchConfiguration("wheel_separation_error").perform(context))
+
     noisy_controller_py = Node(
         package="robovacuum_controller",
         executable="noisy_controller.py",
@@ -29,19 +20,38 @@ def noisy_controller(context, *args, **kwargs):
             {"wheel_radius": wheel_radius + wheel_radius_error,
              "wheel_separation": wheel_separation + wheel_separation_error,
              "use_sim_time": use_sim_time}],
-        condition=IfCondition(use_noisy_controller)
+        condition=IfCondition(use_python),
     )
+
+    noisy_controller_cpp = Node(
+        package="robovacuum_controller",
+        executable="noisy_controller",
+        parameters=[
+            {"wheel_radius": wheel_radius + wheel_radius_error,
+             "wheel_separation": wheel_separation + wheel_separation_error,
+             "use_sim_time": use_sim_time}],
+        condition=UnlessCondition(use_python),
+    )
+
     return [
         noisy_controller_py,
+        noisy_controller_cpp,
     ]
 
+
+
 def generate_launch_description():
+    
     use_sim_time_arg = DeclareLaunchArgument(
         "use_sim_time",
         default_value="True",
     )
-    use_noisy_controller_arg = DeclareLaunchArgument(
-        "use_noisy_controller",
+    use_simple_controller_arg = DeclareLaunchArgument(
+        "use_simple_controller",
+        default_value="True",
+    )
+    use_python_arg = DeclareLaunchArgument(
+        "use_python",
         default_value="False",
     )
     wheel_radius_arg = DeclareLaunchArgument(
@@ -61,45 +71,78 @@ def generate_launch_description():
         default_value="0.02",
     )
     
-    # Path to YAML config file
-    ros2_control_params = os.path.join(
-        get_package_share_directory("robovacuum_controller"),
-        "config",
-        "robovacuum_controller.yaml"
+    use_sim_time = LaunchConfiguration("use_sim_time")
+    use_simple_controller = LaunchConfiguration("use_simple_controller")
+    use_python = LaunchConfiguration("use_python")
+    wheel_radius = LaunchConfiguration("wheel_radius")
+    wheel_separation = LaunchConfiguration("wheel_separation")
+
+    joint_state_broadcaster_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=[
+            "joint_state_broadcaster",
+            "--controller-manager",
+            "/controller_manager",
+        ],
     )
-    
+
+    wheel_controller_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["robovacuum_controller", 
+                   "--controller-manager", 
+                   "/controller_manager"
+        ],
+        condition=UnlessCondition(use_simple_controller),
+    )
+
+    simple_controller = GroupAction(
+        condition=IfCondition(use_simple_controller),
+        actions=[
+            Node(
+                package="controller_manager",
+                executable="spawner",
+                arguments=["simple_velocity_controller", 
+                        "--controller-manager", 
+                        "/controller_manager"
+                ]
+            ),
+            Node(
+                package="robovacuum_controller",
+                executable="simple_controller.py",
+                parameters=[
+                    {"wheel_radius": wheel_radius,
+                    "wheel_separation": wheel_separation,
+                    "use_sim_time": use_sim_time}],
+                condition=IfCondition(use_python),
+            ),
+            Node(
+                package="robovacuum_controller",
+                executable="simple_controller",
+                parameters=[
+                    {"wheel_radius": wheel_radius,
+                    "wheel_separation": wheel_separation,
+                    "use_sim_time": use_sim_time}],
+                condition=UnlessCondition(use_python),
+            ),
+        ]
+    )
+
     noisy_controller_launch = OpaqueFunction(function=noisy_controller)
-    
-    return LaunchDescription([
-        # Launch arguments must come first
-        use_sim_time_arg,
-        use_noisy_controller_arg,
-        wheel_radius_arg,
-        wheel_separation_arg,
-        wheel_radius_error_arg,
-        wheel_separation_error_arg,
-        
-        # Controller manager
-        Node(
-            package="controller_manager",
-            executable="ros2_control_node",
-            parameters=[ros2_control_params],
-            output="screen"
-        ),
-        # Diff drive controller spawner
-        Node(
-            package="controller_manager",
-            executable="spawner",
-            arguments=["robovacuum_controller"],
-            output="screen"
-        ),
-        # Joint state broadcaster spawner
-        Node(
-            package="controller_manager",
-            executable="spawner",
-            arguments=["joint_state_broadcaster"],
-            output="screen"
-        ),
-        
-        noisy_controller_launch,
-    ])
+
+    return LaunchDescription(
+        [
+            use_sim_time_arg,
+            use_simple_controller_arg,
+            use_python_arg,
+            wheel_radius_arg,
+            wheel_separation_arg,
+            wheel_radius_error_arg,
+            wheel_separation_error_arg,
+            joint_state_broadcaster_spawner,
+            wheel_controller_spawner,
+            simple_controller,
+            noisy_controller_launch,
+        ]
+    )

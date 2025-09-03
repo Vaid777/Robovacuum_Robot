@@ -9,6 +9,9 @@ controller_manager: #We are configuring the controller manager.
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
+    simple_velocity_controller:
+      type: velocity_controllers/JointGroupVelocityController
+
 
 robovacuum_controller:
   ros__parameters:
@@ -67,3 +70,9 @@ robovacuum_controller:
         min_acceleration       : -5.0   # rad/s^2
         has_jerk_limits        : false
         max_jerk               : 2.5  # rad/s^3
+
+simple_velocity_controller:
+  ros_parameters:
+    joints:
+      - wheel_left_joint
+      - wheel_right_joint

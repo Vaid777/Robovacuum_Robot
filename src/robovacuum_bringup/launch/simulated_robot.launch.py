@@ -20,7 +20,8 @@ def generate_launch_description():
             "controller.launch.py"
         ),
         launch_arguments={
-            "use_noisy_controller": "True",
+            "use_simple_controller": "True",
+            "use_python": "True"
         }.items(),
     )
     
