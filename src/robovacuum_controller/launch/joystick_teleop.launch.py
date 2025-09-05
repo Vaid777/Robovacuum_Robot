@@ -10,6 +10,10 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
 
+    use_sim_time_arg = DeclareLaunchArgument(name="use_sim_time", default_value="True",
+                                      description="Use simulated time"
+    )
+
     joy_teleop = Node(
         package="joy_teleop",
         executable="joy_teleop",
@@ -25,6 +29,7 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
+            use_sim_time_arg,
             joy_teleop,
             joy_node
         ]
