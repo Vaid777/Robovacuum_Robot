@@ -42,9 +42,15 @@ def generate_launch_description():
         ],
     )
 
+    #imu_driver_node = Node(
+        #package="robovacuum_firmware",
+        #executable="bno055_driver.py"
+    #)
+
     return LaunchDescription(
         [
             robot_state_publisher_node,
             controller_manager,
+            #imu_driver_node
         ]
     )

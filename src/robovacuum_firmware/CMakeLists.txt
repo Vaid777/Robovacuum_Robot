@@ -54,6 +54,7 @@ install(
 install(PROGRAMS
   ${PROJECT_NAME}/simple_serial_transmitter.py
   ${PROJECT_NAME}/simple_serial_receiver.py
+  ${PROJECT_NAME}/bno055_driver.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
