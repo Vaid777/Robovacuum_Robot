@@ -25,7 +25,7 @@ def generate_launch_description():
             )
         ),
         launch_arguments={
-            "use_simple_controller": "True",
+            "use_simple_controller": "False",
         }.items(),
     )
     
