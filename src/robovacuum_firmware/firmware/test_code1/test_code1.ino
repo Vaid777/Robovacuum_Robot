@@ -1,18 +1,18 @@
 #include <PID_v1.h>
 
 // L298N H-Bridge Connection PINs
-#define L298N_enA 9  // PWM
+#define L298N_enA 6  // PWM
 #define L298N_enB 11  // PWM
 #define L298N_in4 8  // Dir Motor B
 #define L298N_in3 7  // Dir Motor B
-#define L298N_in2 13  // Dir Motor A
-#define L298N_in1 12  // Dir Motor A
+#define L298N_in2 2  // Dir Motor A
+#define L298N_in1 4  // Dir Motor A
 
 // Wheel Encoders Connection PINs
 #define right_encoder_phaseA 3  // Interrupt 
 #define right_encoder_phaseB 5  
-#define left_encoder_phaseA 2   // Interrupt
-#define left_encoder_phaseB 4
+#define left_encoder_phaseA 9   // Interrupt
+#define left_encoder_phaseB 10
 
 // Encoders
 unsigned int right_encoder_counter = 0;
