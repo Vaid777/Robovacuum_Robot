@@ -1,0 +1,50 @@
+rtabmap:
+  ros__parameters:
+    use_sim_time: false  # Set true for Gazebo
+    
+    # Frame settings
+    frame_id: "base_link"
+    map_frame_id: "map"
+    odom_frame_id: "odom"
+    
+    # TF settings
+    publish_tf: true
+    tf_delay: 0.05
+    
+    # Input settings for monocular camera
+    subscribe_depth: false
+    subscribe_rgb: true
+    subscribe_stereo: false
+    subscribe_scan: false
+    visual_odometry: true
+    approx_sync: true
+    
+    # RTAB-Map parameters for monocular SLAM
+    Rtabmap/DetectionRate: "1.0"
+    Rtabmap/CreateIntermediateNodes: "false"
+    
+    # Visual Odometry parameters
+    Odom/Strategy: "0"        # 0=Frame-to-Map, 1=Frame-to-Frame
+    Odom/ResetCountdown: "1"
+    Vis/CorType: "0"          # 0=Features, 1=Optical Flow
+    Vis/MaxFeatures: "1000"
+    Vis/MinInliers: "20"
+    OdomF2M/MaxSize: "1000"
+    
+    # Feature settings for monocular
+    Kp/MaxFeatures: "400"
+    Kp/DetectorStrategy: "6"  # 6=ORB
+    SURF/HessianThreshold: "1000"
+    
+    # Loop closure detection
+    Mem/STMSize: "30"
+    Mem/IncrementalMemory: "true"
+    Mem/InitWMWithAllNodes: "false"
+    Mem/RehearsalSimilarity: "0.45"
+    
+    # Grid map parameters
+    Grid/FromDepth: "false"
+    Grid/MaxGroundHeight: "0.05"
+    Grid/MaxObstacleHeight: "0.5"
+    Grid/NoiseFilteringRadius: "0.05"
+    Grid/NoiseFilteringMinNeighbors: "5"
