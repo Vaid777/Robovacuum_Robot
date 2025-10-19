@@ -148,5 +148,4 @@
     <child link="imu_link"/>
     <origin xyz="0.225 0 0.1" rpy="0 0 0"/>
   </joint>
-
 </robot>
